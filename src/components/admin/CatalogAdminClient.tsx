@@ -5,10 +5,13 @@ import { useRouter } from 'next/navigation'
 import type { Category, Collection, Color } from '@/types'
 import {
   createCategory,
+  updateCategory,
   deleteCategory,
   createCollection,
+  updateCollection,
   deleteCollection,
   createColor,
+  updateColor,
   deleteColor,
 } from '@/lib/actions/taxonomy'
 
@@ -36,6 +39,7 @@ export default function CatalogAdminClient({
     router.refresh()
   }
 
+  // ─── Categorías ───────────────────────────────────────────────────────────
   async function addCategory(e: React.FormEvent) {
     e.preventDefault()
     setError('')
@@ -47,6 +51,13 @@ export default function CatalogAdminClient({
     refresh()
   }
 
+  async function renameCategory(id: string, name: string) {
+    const res = await updateCategory(id, name)
+    if (!res.success) return setError(res.error || 'Error al editar')
+    setCategories((prev) => prev.map((c) => (c.id === id ? { ...c, name } : c)))
+    refresh()
+  }
+
   async function removeCategory(id: string) {
     if (!confirm('¿Eliminar esta categoría?')) return
     const res = await deleteCategory(id)
@@ -55,6 +66,7 @@ export default function CatalogAdminClient({
     refresh()
   }
 
+  // ─── Colecciones ──────────────────────────────────────────────────────────
   async function addCollection(e: React.FormEvent) {
     e.preventDefault()
     setError('')
@@ -66,6 +78,13 @@ export default function CatalogAdminClient({
     refresh()
   }
 
+  async function renameCollection(id: string, name: string) {
+    const res = await updateCollection(id, name)
+    if (!res.success) return setError(res.error || 'Error al editar')
+    setCollections((prev) => prev.map((c) => (c.id === id ? { ...c, name } : c)))
+    refresh()
+  }
+
   async function removeCollection(id: string) {
     if (!confirm('¿Eliminar esta colección?')) return
     const res = await deleteCollection(id)
@@ -74,6 +93,7 @@ export default function CatalogAdminClient({
     refresh()
   }
 
+  // ─── Colores ──────────────────────────────────────────────────────────────
   async function addColor(e: React.FormEvent) {
     e.preventDefault()
     setError('')
@@ -83,6 +103,13 @@ export default function CatalogAdminClient({
     setColors((prev) => [...prev, res.color!])
     setColorName('')
     setColorHex('#000000')
+    refresh()
+  }
+
+  async function editColor(id: string, name: string, hex: string) {
+    const res = await updateColor(id, name, hex)
+    if (!res.success) return setError(res.error || 'Error al editar')
+    setColors((prev) => prev.map((c) => (c.id === id ? { ...c, name, hex } : c)))
     refresh()
   }
 
@@ -119,10 +146,15 @@ export default function CatalogAdminClient({
             />
             <AddButton />
           </form>
-          <ItemList
-            items={categories.map((c) => ({ id: c.id, label: c.name }))}
-            onRemove={removeCategory}
-          />
+          {categories.map((c) => (
+            <EditableRow
+              key={c.id}
+              name={c.name}
+              onSave={(name) => renameCategory(c.id, name)}
+              onRemove={() => removeCategory(c.id)}
+            />
+          ))}
+          {categories.length === 0 && <Empty />}
         </Panel>
 
         {/* Colecciones */}
@@ -136,10 +168,15 @@ export default function CatalogAdminClient({
             />
             <AddButton />
           </form>
-          <ItemList
-            items={collections.map((c) => ({ id: c.id, label: c.name }))}
-            onRemove={removeCollection}
-          />
+          {collections.map((c) => (
+            <EditableRow
+              key={c.id}
+              name={c.name}
+              onSave={(name) => renameCollection(c.id, name)}
+              onRemove={() => removeCollection(c.id)}
+            />
+          ))}
+          {collections.length === 0 && <Empty />}
         </Panel>
 
         {/* Colores */}
@@ -160,14 +197,16 @@ export default function CatalogAdminClient({
             />
             <AddButton />
           </form>
-          <ItemList
-            items={colors.map((c) => ({
-              id: c.id,
-              label: c.name,
-              swatch: c.hex,
-            }))}
-            onRemove={removeColor}
-          />
+          {colors.map((c) => (
+            <EditableRow
+              key={c.id}
+              name={c.name}
+              hex={c.hex ?? '#000000'}
+              onSave={(name, hex) => editColor(c.id, name, hex ?? '#000000')}
+              onRemove={() => removeColor(c.id)}
+            />
+          ))}
+          {colors.length === 0 && <Empty />}
         </Panel>
       </div>
     </div>
@@ -197,41 +236,102 @@ function AddButton() {
   )
 }
 
-function ItemList({
-  items,
+function Empty() {
+  return <p className="text-xs text-bc-gray-400 font-light">Sin elementos.</p>
+}
+
+function EditableRow({
+  name,
+  hex,
+  onSave,
   onRemove,
 }: {
-  items: { id: string; label: string; swatch?: string | null }[]
-  onRemove: (id: string) => void
+  name: string
+  hex?: string
+  onSave: (name: string, hex?: string) => void
+  onRemove: () => void
 }) {
-  if (items.length === 0) {
-    return <p className="text-xs text-bc-gray-400 font-light">Sin elementos.</p>
+  const [editing, setEditing] = useState(false)
+  const [draftName, setDraftName] = useState(name)
+  const [draftHex, setDraftHex] = useState(hex ?? '#000000')
+  const isColor = hex !== undefined
+
+  function start() {
+    setDraftName(name)
+    setDraftHex(hex ?? '#000000')
+    setEditing(true)
   }
-  return (
-    <ul className="divide-y divide-bc-gray-100">
-      {items.map((item) => (
-        <li
-          key={item.id}
-          className="flex items-center justify-between py-2 text-sm font-light text-bc-black"
+
+  function save() {
+    if (!draftName.trim()) return
+    onSave(draftName.trim(), isColor ? draftHex : undefined)
+    setEditing(false)
+  }
+
+  if (editing) {
+    return (
+      <div className="flex items-center gap-2 py-2 border-b border-bc-gray-100">
+        {isColor && (
+          <input
+            type="color"
+            value={draftHex}
+            onChange={(e) => setDraftHex(e.target.value)}
+            className="w-8 h-8 border border-bc-gray-200 cursor-pointer p-0.5 flex-shrink-0"
+          />
+        )}
+        <input
+          autoFocus
+          value={draftName}
+          onChange={(e) => setDraftName(e.target.value)}
+          onKeyDown={(e) => {
+            if (e.key === 'Enter') save()
+            if (e.key === 'Escape') setEditing(false)
+          }}
+          className="flex-1 border border-bc-gray-200 px-2 py-1 text-sm font-light focus:border-bc-black outline-none"
+        />
+        <button
+          onClick={save}
+          className="text-[10px] uppercase tracking-wide text-bc-black hover:text-bc-accent"
         >
-          <span className="flex items-center gap-2">
-            {item.swatch !== undefined && (
-              <span
-                className="inline-block w-4 h-4 rounded-full border border-bc-gray-200"
-                style={{ backgroundColor: item.swatch || 'transparent' }}
-              />
-            )}
-            {item.label}
-          </span>
-          <button
-            onClick={() => onRemove(item.id)}
-            className="text-bc-gray-400 hover:text-red-500 transition-colors"
-            title="Eliminar"
-          >
-            ×
-          </button>
-        </li>
-      ))}
-    </ul>
+          Guardar
+        </button>
+        <button
+          onClick={() => setEditing(false)}
+          className="text-bc-gray-400 hover:text-bc-black"
+          title="Cancelar"
+        >
+          ×
+        </button>
+      </div>
+    )
+  }
+
+  return (
+    <div className="flex items-center justify-between py-2 border-b border-bc-gray-100 text-sm font-light text-bc-black group">
+      <span className="flex items-center gap-2">
+        {isColor && (
+          <span
+            className="inline-block w-4 h-4 rounded-full border border-bc-gray-200"
+            style={{ backgroundColor: hex || 'transparent' }}
+          />
+        )}
+        {name}
+      </span>
+      <span className="flex items-center gap-3">
+        <button
+          onClick={start}
+          className="text-[10px] uppercase tracking-wide text-bc-gray-400 hover:text-bc-black transition-colors"
+        >
+          Editar
+        </button>
+        <button
+          onClick={onRemove}
+          className="text-bc-gray-400 hover:text-red-500 transition-colors"
+          title="Eliminar"
+        >
+          ×
+        </button>
+      </span>
+    </div>
   )
 }

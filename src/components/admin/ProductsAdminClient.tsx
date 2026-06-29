@@ -65,6 +65,14 @@ export default function ProductsAdminClient({
   const [uploading, setUploading] = useState(false)
   const [saving, setSaving] = useState(false)
 
+  // Modal de alta rápida (categoría / colección / color)
+  const [quickAdd, setQuickAdd] = useState<
+    'category' | 'collection' | 'color' | null
+  >(null)
+  const [quickName, setQuickName] = useState('')
+  const [quickHex, setQuickHex] = useState('#000000')
+  const [quickSaving, setQuickSaving] = useState(false)
+
   function resetForm() {
     setName('')
     setCategory(categories[0]?.slug ?? '')
@@ -133,32 +141,47 @@ export default function ProductsAdminClient({
     )
   }
 
-  // ─── Altas inline ───────────────────────────────────────────────────────────
-  async function handleAddCategory() {
-    const value = prompt('Nombre de la nueva categoría:')
-    if (!value?.trim()) return
-    const res = await createCategory(value)
-    if (!res.success) return setError(res.error || 'Error al crear categoría')
-    setCategories((prev) => [...prev, res.category!])
-    setCategory(res.category!.slug)
+  // ─── Altas inline (modal propio) ────────────────────────────────────────────
+  function openQuickAdd(type: 'category' | 'collection' | 'color') {
+    setQuickName('')
+    setQuickHex('#000000')
+    setQuickAdd(type)
   }
 
-  async function handleAddCollection() {
-    const value = prompt('Nombre de la nueva colección:')
-    if (!value?.trim()) return
-    const res = await createCollection(value)
-    if (!res.success) return setError(res.error || 'Error al crear colección')
-    setCollections((prev) => [...prev, res.collection!])
-    setCollection(res.collection!.slug)
-  }
+  async function handleQuickAddSubmit(e: React.FormEvent) {
+    e.preventDefault()
+    if (!quickName.trim()) return
+    setQuickSaving(true)
+    setError('')
 
-  async function handleAddColor() {
-    const value = prompt('Nombre del nuevo color:')
-    if (!value?.trim()) return
-    const res = await createColor(value)
-    if (!res.success) return setError(res.error || 'Error al crear color')
-    setColors((prev) => [...prev, res.color!])
-    setSelectedColors((prev) => [...prev, res.color!.name])
+    if (quickAdd === 'category') {
+      const res = await createCategory(quickName)
+      if (!res.success) {
+        setQuickSaving(false)
+        return setError(res.error || 'Error al crear categoría')
+      }
+      setCategories((prev) => [...prev, res.category!])
+      setCategory(res.category!.slug)
+    } else if (quickAdd === 'collection') {
+      const res = await createCollection(quickName)
+      if (!res.success) {
+        setQuickSaving(false)
+        return setError(res.error || 'Error al crear colección')
+      }
+      setCollections((prev) => [...prev, res.collection!])
+      setCollection(res.collection!.slug)
+    } else if (quickAdd === 'color') {
+      const res = await createColor(quickName, quickHex)
+      if (!res.success) {
+        setQuickSaving(false)
+        return setError(res.error || 'Error al crear color')
+      }
+      setColors((prev) => [...prev, res.color!])
+      setSelectedColors((prev) => [...prev, res.color!.name])
+    }
+
+    setQuickSaving(false)
+    setQuickAdd(null)
   }
 
   // ─── Imágenes ───────────────────────────────────────────────────────────────
@@ -395,7 +418,7 @@ export default function ProductsAdminClient({
                       Categoría
                       <button
                         type="button"
-                        onClick={handleAddCategory}
+                        onClick={() => openQuickAdd('category')}
                         className="text-bc-accent normal-case tracking-normal text-[10px]"
                       >
                         + nueva
@@ -422,7 +445,7 @@ export default function ProductsAdminClient({
                       Colección
                       <button
                         type="button"
-                        onClick={handleAddCollection}
+                        onClick={() => openQuickAdd('collection')}
                         className="text-bc-accent normal-case tracking-normal text-[10px]"
                       >
                         + nueva
@@ -560,7 +583,7 @@ export default function ProductsAdminClient({
                     Colores
                     <button
                       type="button"
-                      onClick={handleAddColor}
+                      onClick={() => openQuickAdd('color')}
                       className="text-bc-accent normal-case tracking-normal text-[10px]"
                     >
                       + color
@@ -670,6 +693,63 @@ export default function ProductsAdminClient({
                     type="button"
                     onClick={() => setShowForm(false)}
                     className="flex-1 py-3 border border-bc-gray-200 text-[10px] tracking-[2px] uppercase text-bc-gray-700 hover:text-bc-black transition-colors"
+                  >
+                    Cancelar
+                  </button>
+                </div>
+              </form>
+            </div>
+          </div>
+        </>
+      )}
+
+      {/* Modal de alta rápida */}
+      {quickAdd && (
+        <>
+          <div
+            className="fixed inset-0 z-[60] bg-black/30"
+            onClick={() => setQuickAdd(null)}
+          />
+          <div className="fixed inset-0 z-[61] flex items-center justify-center p-4">
+            <div className="bg-white w-full max-w-xs p-6">
+              <h3 className="text-sm font-light text-bc-black mb-4">
+                {quickAdd === 'category'
+                  ? 'Nueva categoría'
+                  : quickAdd === 'collection'
+                    ? 'Nueva colección'
+                    : 'Nuevo color'}
+              </h3>
+              <form onSubmit={handleQuickAddSubmit} className="space-y-4">
+                <div className="flex gap-2 items-center">
+                  {quickAdd === 'color' && (
+                    <input
+                      type="color"
+                      value={quickHex}
+                      onChange={(e) => setQuickHex(e.target.value)}
+                      className="w-10 h-[38px] border border-bc-gray-200 cursor-pointer p-0.5 flex-shrink-0"
+                      title="Color"
+                    />
+                  )}
+                  <input
+                    autoFocus
+                    value={quickName}
+                    onChange={(e) => setQuickName(e.target.value)}
+                    placeholder="Nombre"
+                    className="flex-1 border border-bc-gray-200 px-3 py-2 text-sm font-light focus:border-bc-black outline-none"
+                  />
+                </div>
+                <div className="flex gap-3">
+                  <button
+                    type="submit"
+                    disabled={quickSaving}
+                    className="flex-1 py-2.5 bg-bc-black text-bc-white text-[10px] tracking-[2px] uppercase font-light hover:bg-bc-accent transition-colors disabled:opacity-50"
+                  >
+                    {quickSaving ? 'Guardando...' : 'Agregar'}
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => setQuickAdd(null)}
+                    className="flex-1 py-2.5 border border-bc-gray-200 text-[10px] tracking-[2px] uppercase text-bc-gray-700 hover:text-bc-black transition-colors"
                   >
                     Cancelar
                   </button>
