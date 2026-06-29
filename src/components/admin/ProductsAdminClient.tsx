@@ -16,6 +16,7 @@ import {
   createColor,
 } from '@/lib/actions/taxonomy'
 import { uploadProductImage } from '@/lib/actions/storage'
+import ImportCsvModal from './ImportCsvModal'
 
 function formatPrice(n: number) {
   return new Intl.NumberFormat('es-AR', {
@@ -47,6 +48,7 @@ export default function ProductsAdminClient({
   const [colors, setColors] = useState(initialColors)
 
   const [showForm, setShowForm] = useState(false)
+  const [showImport, setShowImport] = useState(false)
   const [editingProduct, setEditingProduct] = useState<Product | null>(null)
   const [error, setError] = useState('')
 
@@ -290,12 +292,20 @@ export default function ProductsAdminClient({
             {products.length} producto{products.length !== 1 ? 's' : ''}
           </p>
         </div>
-        <button
-          onClick={openCreate}
-          className="px-5 py-2.5 bg-bc-black text-bc-white text-[10px] tracking-[2px] uppercase font-light hover:bg-bc-accent transition-colors"
-        >
-          + Nuevo producto
-        </button>
+        <div className="flex gap-3">
+          <button
+            onClick={() => setShowImport(true)}
+            className="px-5 py-2.5 border border-bc-gray-300 text-bc-black text-[10px] tracking-[2px] uppercase font-light hover:border-bc-black transition-colors"
+          >
+            Importar CSV
+          </button>
+          <button
+            onClick={openCreate}
+            className="px-5 py-2.5 bg-bc-black text-bc-white text-[10px] tracking-[2px] uppercase font-light hover:bg-bc-accent transition-colors"
+          >
+            + Nuevo producto
+          </button>
+        </div>
       </div>
 
       {/* Table */}
@@ -701,6 +711,14 @@ export default function ProductsAdminClient({
             </div>
           </div>
         </>
+      )}
+
+      {/* Modal de importación CSV */}
+      {showImport && (
+        <ImportCsvModal
+          onClose={() => setShowImport(false)}
+          onDone={() => router.refresh()}
+        />
       )}
 
       {/* Modal de alta rápida */}
