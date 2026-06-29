@@ -3,7 +3,7 @@ import { Cormorant_Garamond, Jost } from 'next/font/google'
 import './globals.css'
 import TopBar from '@/components/store/TopBar'
 import Header from '@/components/store/Header'
-import Footer from '@/components/store/Footer'
+import ConditionalFooter from '@/components/store/ConditionalFooter'
 import CartDrawer from '@/components/store/CartDrawer'
 import ProductModal from '@/components/store/ProductModal'
 import CheckoutModal from '@/components/store/CheckoutModal'
@@ -42,7 +42,7 @@ export default function RootLayout({
         <TopBar />
         <Header />
         {children}
-        <Footer />
+        <ConditionalFooter />
         <CartDrawer />
         <ProductModal />
         <CheckoutModal />
