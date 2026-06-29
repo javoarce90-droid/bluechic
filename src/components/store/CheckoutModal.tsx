@@ -218,7 +218,7 @@ export default function CheckoutModal() {
 
                   {payment === 'mp' && (
                     <div className="mt-3 p-4 bg-blue-50 text-sm text-blue-700 font-light">
-                      Al confirmar el pedido te enviaremos el link de pago por email y WhatsApp.
+                      Al confirmar te llevaremos a Mercado Pago para completar el pago de forma segura.
                     </div>
                   )}
 
