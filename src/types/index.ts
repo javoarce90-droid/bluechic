@@ -28,6 +28,14 @@ export interface Color {
   created_at: string
 }
 
+export interface StoreSettings {
+  transfer_cbu: string
+  transfer_alias: string
+  transfer_holder: string
+  transfer_bank: string
+  mp_alias: string
+}
+
 export interface ProductVariant {
   id: string
   product_id: string

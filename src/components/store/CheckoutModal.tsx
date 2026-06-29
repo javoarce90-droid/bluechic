@@ -1,9 +1,31 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { useCartStore } from '@/store/cart'
 import { createOrder } from '@/lib/actions/orders'
 import { createCheckoutPreference } from '@/lib/actions/mercadopago'
+import { getStoreSettings } from '@/lib/actions/settings'
+import type { StoreSettings } from '@/types'
+
+function CopyButton({ value }: { value: string }) {
+  const [copied, setCopied] = useState(false)
+  if (!value) return null
+  return (
+    <button
+      type="button"
+      onClick={async () => {
+        try {
+          await navigator.clipboard.writeText(value)
+          setCopied(true)
+          setTimeout(() => setCopied(false), 1500)
+        } catch {}
+      }}
+      className="ml-2 text-[10px] uppercase tracking-wide text-bc-accent hover:underline"
+    >
+      {copied ? 'Copiado ✓' : 'Copiar'}
+    </button>
+  )
+}
 
 function formatPrice(n: number) {
   return new Intl.NumberFormat('es-AR', {
@@ -22,6 +44,14 @@ export default function CheckoutModal() {
   const [isSubmitting, setIsSubmitting] = useState(false)
   const [orderNumber, setOrderNumber] = useState('')
   const [payError, setPayError] = useState('')
+  const [settings, setSettings] = useState<StoreSettings | null>(null)
+
+  // Trae la config de pagos cuando se abre el checkout
+  useEffect(() => {
+    if (isCheckoutOpen && !settings) {
+      getStoreSettings().then(setSettings)
+    }
+  }, [isCheckoutOpen, settings])
 
   const sub = subtotal()
   const freeShipping = sub >= 200000
@@ -132,9 +162,18 @@ export default function CheckoutModal() {
                   <div className="text-[9px] tracking-[2px] uppercase text-bc-gray-500 mb-3">
                     Datos de transferencia
                   </div>
-                  <div><span className="text-bc-gray-500">CBU:</span> 0000000000000000000000</div>
-                  <div><span className="text-bc-gray-500">Alias:</span> BLUECHIC.MODA</div>
-                  <div><span className="text-bc-gray-500">Titular:</span> Blue Chic</div>
+                  {settings?.transfer_cbu && (
+                    <div><span className="text-bc-gray-500">CBU/CVU:</span> {settings.transfer_cbu}<CopyButton value={settings.transfer_cbu} /></div>
+                  )}
+                  {settings?.transfer_alias && (
+                    <div><span className="text-bc-gray-500">Alias:</span> {settings.transfer_alias}<CopyButton value={settings.transfer_alias} /></div>
+                  )}
+                  {settings?.transfer_holder && (
+                    <div><span className="text-bc-gray-500">Titular:</span> {settings.transfer_holder}</div>
+                  )}
+                  {settings?.transfer_bank && (
+                    <div><span className="text-bc-gray-500">Banco:</span> {settings.transfer_bank}</div>
+                  )}
                   <div><span className="text-bc-gray-500">Monto:</span> {formatPrice(total)}</div>
                 </div>
               )}
@@ -217,15 +256,50 @@ export default function CheckoutModal() {
                   </div>
 
                   {payment === 'mp' && (
-                    <div className="mt-3 p-4 bg-blue-50 text-sm text-blue-700 font-light">
-                      Al confirmar te llevaremos a Mercado Pago para completar el pago de forma segura.
+                    <div className="mt-3 p-4 bg-blue-50 text-sm text-blue-700 font-light space-y-2">
+                      <div>
+                        Al confirmar te llevaremos a Mercado Pago para completar el pago de forma segura.
+                      </div>
+                      {settings?.mp_alias && (
+                        <div className="pt-1 text-bc-gray-700">
+                          <span className="font-medium">Alias MP:</span>{' '}
+                          {settings.mp_alias}
+                          <CopyButton value={settings.mp_alias} />
+                          <div className="text-bc-gray-500 text-xs mt-1">
+                            O transferí a este alias y enviá el comprobante por WhatsApp.
+                          </div>
+                        </div>
+                      )}
                     </div>
                   )}
 
                   {payment === 'transfer' && (
                     <div className="mt-3 p-4 bg-bc-gray-100 text-sm font-light space-y-1 text-bc-gray-700">
-                      <div><span className="font-medium">CBU:</span> 0000000000000000000000</div>
-                      <div><span className="font-medium">Alias:</span> BLUECHIC.MODA</div>
+                      {settings?.transfer_cbu && (
+                        <div>
+                          <span className="font-medium">CBU/CVU:</span>{' '}
+                          {settings.transfer_cbu}
+                          <CopyButton value={settings.transfer_cbu} />
+                        </div>
+                      )}
+                      {settings?.transfer_alias && (
+                        <div>
+                          <span className="font-medium">Alias:</span>{' '}
+                          {settings.transfer_alias}
+                          <CopyButton value={settings.transfer_alias} />
+                        </div>
+                      )}
+                      {settings?.transfer_holder && (
+                        <div><span className="font-medium">Titular:</span> {settings.transfer_holder}</div>
+                      )}
+                      {settings?.transfer_bank && (
+                        <div><span className="font-medium">Banco:</span> {settings.transfer_bank}</div>
+                      )}
+                      {!settings?.transfer_cbu && !settings?.transfer_alias && (
+                        <div className="text-bc-gray-500 text-xs">
+                          Te enviaremos los datos de transferencia al confirmar el pedido.
+                        </div>
+                      )}
                       <div className="text-bc-gray-500 text-xs mt-2">
                         Enviá el comprobante por WhatsApp una vez realizada la transferencia.
                       </div>
