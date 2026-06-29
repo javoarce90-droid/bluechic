@@ -30,7 +30,7 @@ export default function ContactSection() {
 
           <div className="space-y-5 pt-4">
             {[
-              { icon: '✉', label: 'Email', value: 'hola@bluechic.com.ar' },
+              { icon: '✉', label: 'Email', value: 'Bluecchic@gmail.com' },
               { icon: '📱', label: 'WhatsApp', value: '+54 9 11 5850-8509' },
               { icon: '📍', label: 'Ubicación', value: 'Buenos Aires, Argentina' },
               { icon: '🕐', label: 'Horario', value: 'Lun–Vie, 10:00–18:00' },

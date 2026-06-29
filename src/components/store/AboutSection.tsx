@@ -39,7 +39,7 @@ export default function AboutSection() {
             seguras, cómodas y únicas.
           </p>
           <p className="text-bc-gray-500 text-sm leading-relaxed font-light tracking-wide">
-            Cada temporada viajo, investigo tendencias y selecciono
+            Cada temporada investigo tendencias y selecciono
             personalmente las piezas que forman parte de nuestra colección.
             No hacemos fast fashion — hacemos moda con propósito.
           </p>

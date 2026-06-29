@@ -1,3 +1,5 @@
+import Image from 'next/image'
+
 export default function BrandSection() {
   return (
     <section id="marca" className="bg-bc-black py-24 px-6">
@@ -39,19 +41,23 @@ export default function BrandSection() {
         </div>
 
         <div className="grid grid-cols-2 gap-4">
-          <div className="aspect-[3/4] bg-bc-gray-900 overflow-hidden">
-            <div className="w-full h-full bg-gradient-to-br from-bc-gray-900 to-bc-gray-700 flex items-end p-4">
-              <span className="text-[10px] tracking-[2px] uppercase text-bc-gray-500">
-                Colección 2026
-              </span>
-            </div>
+          <div className="relative aspect-[3/4] bg-bc-gray-900 overflow-hidden">
+            <Image
+              src="/brand-1.jpg"
+              alt="Blue Chic — Colección 2026"
+              fill
+              sizes="(max-width: 768px) 50vw, 25vw"
+              className="object-cover"
+            />
           </div>
-          <div className="aspect-[3/4] bg-bc-gray-900 overflow-hidden mt-8">
-            <div className="w-full h-full bg-gradient-to-br from-bc-gray-700 to-bc-gray-900 flex items-end p-4">
-              <span className="text-[10px] tracking-[2px] uppercase text-bc-gray-500">
-                Detalles únicos
-              </span>
-            </div>
+          <div className="relative aspect-[3/4] bg-bc-gray-900 overflow-hidden">
+            <Image
+              src="/brand-2.jpg"
+              alt="Blue Chic — Detalles únicos"
+              fill
+              sizes="(max-width: 768px) 50vw, 25vw"
+              className="object-cover"
+            />
           </div>
         </div>
       </div>

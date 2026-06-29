@@ -6,18 +6,11 @@ const CATALOG_LINKS = [
   'Vestidos',
 ]
 
-const INFO_LINKS = [
-  'Preguntas frecuentes',
-  'Guía de talles',
-  'Cambios y devoluciones',
-  'Política de envíos',
-]
-
 export default function Footer() {
   return (
     <footer className="bg-bc-black text-bc-gray-300 pt-16 pb-8 px-6">
       <div className="max-w-6xl mx-auto">
-        <div className="grid grid-cols-2 md:grid-cols-4 gap-12 pb-12 border-b border-bc-gray-700">
+        <div className="grid grid-cols-2 md:grid-cols-3 gap-12 pb-12 border-b border-bc-gray-700">
           {/* Brand */}
           <div className="col-span-2 md:col-span-1">
             <div className="font-display text-2xl font-light tracking-[5px] uppercase text-bc-white mb-3">
@@ -71,25 +64,6 @@ export default function Footer() {
             </ul>
           </div>
 
-          {/* Información */}
-          <div>
-            <h4 className="text-[10px] tracking-[3px] uppercase text-bc-white font-light mb-5">
-              Información
-            </h4>
-            <ul className="space-y-3">
-              {INFO_LINKS.map((link) => (
-                <li key={link}>
-                  <a
-                    href="#"
-                    className="text-[11px] text-bc-gray-500 hover:text-bc-white transition-colors tracking-wide"
-                  >
-                    {link}
-                  </a>
-                </li>
-              ))}
-            </ul>
-          </div>
-
           {/* Contacto */}
           <div>
             <h4 className="text-[10px] tracking-[3px] uppercase text-bc-white font-light mb-5">
@@ -101,10 +75,10 @@ export default function Footer() {
               </li>
               <li>
                 <a
-                  href="mailto:hola@bluechic.com.ar"
+                  href="mailto:Bluecchic@gmail.com"
                   className="text-[11px] text-bc-gray-500 hover:text-bc-white transition-colors tracking-wide"
                 >
-                  hola@bluechic.com.ar
+                  Bluecchic@gmail.com
                 </a>
               </li>
               <li>
