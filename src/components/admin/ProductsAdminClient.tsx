@@ -404,10 +404,10 @@ export default function ProductsAdminClient({
       {showForm && (
         <>
           <div
-            className="fixed inset-0 z-50 bg-black/30"
+            className="fixed inset-0 z-[3000] bg-black/30"
             onClick={() => setShowForm(false)}
           />
-          <div className="fixed inset-0 z-[51] flex items-start justify-center p-4 overflow-y-auto">
+          <div className="fixed inset-0 z-[3001] flex items-start justify-center p-4 overflow-y-auto">
             <div className="bg-white w-full max-w-2xl p-8 my-8">
               <h2 className="text-xl font-light text-bc-black mb-6">
                 {editingProduct ? 'Editar producto' : 'Nuevo producto'}
@@ -741,10 +741,10 @@ export default function ProductsAdminClient({
       {quickAdd && (
         <>
           <div
-            className="fixed inset-0 z-[60] bg-black/30"
+            className="fixed inset-0 z-[3010] bg-black/30"
             onClick={() => setQuickAdd(null)}
           />
-          <div className="fixed inset-0 z-[61] flex items-center justify-center p-4">
+          <div className="fixed inset-0 z-[3011] flex items-center justify-center p-4">
             <div className="bg-white w-full max-w-xs p-6">
               <h3 className="text-sm font-light text-bc-black mb-4">
                 {quickAdd === 'category'

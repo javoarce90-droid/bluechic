@@ -182,9 +182,9 @@ export default function ImportCsvModal({
 
   return (
     <>
-      <div className="fixed inset-0 z-[60] bg-black/30" onClick={onClose} />
-      <div className="fixed inset-0 z-[61] flex items-start justify-center p-4 overflow-y-auto">
-        <div className="bg-white w-full max-w-xl p-8 my-8">
+      <div className="fixed inset-0 z-[3000] bg-black/30" onClick={onClose} />
+      <div className="fixed inset-0 z-[3001] flex items-center justify-center p-4">
+        <div className="bg-white w-full max-w-xl p-8 max-h-[90vh] overflow-y-auto">
           <h2 className="text-xl font-light text-bc-black mb-2">
             Importar productos (CSV)
           </h2>
