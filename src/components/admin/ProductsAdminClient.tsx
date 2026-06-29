@@ -17,6 +17,7 @@ import {
 } from '@/lib/actions/taxonomy'
 import { uploadProductImage } from '@/lib/actions/storage'
 import ImportCsvModal from './ImportCsvModal'
+import BulkImageUploadModal from './BulkImageUploadModal'
 
 function formatPrice(n: number) {
   return new Intl.NumberFormat('es-AR', {
@@ -49,6 +50,7 @@ export default function ProductsAdminClient({
 
   const [showForm, setShowForm] = useState(false)
   const [showImport, setShowImport] = useState(false)
+  const [showBulkImages, setShowBulkImages] = useState(false)
   const [editingProduct, setEditingProduct] = useState<Product | null>(null)
   const [error, setError] = useState('')
 
@@ -293,6 +295,12 @@ export default function ProductsAdminClient({
           </p>
         </div>
         <div className="flex gap-3">
+          <button
+            onClick={() => setShowBulkImages(true)}
+            className="px-5 py-2.5 border border-bc-gray-300 text-bc-black text-[10px] tracking-[2px] uppercase font-light hover:border-bc-black transition-colors"
+          >
+            Subir imágenes
+          </button>
           <button
             onClick={() => setShowImport(true)}
             className="px-5 py-2.5 border border-bc-gray-300 text-bc-black text-[10px] tracking-[2px] uppercase font-light hover:border-bc-black transition-colors"
@@ -717,6 +725,14 @@ export default function ProductsAdminClient({
       {showImport && (
         <ImportCsvModal
           onClose={() => setShowImport(false)}
+          onDone={() => router.refresh()}
+        />
+      )}
+
+      {/* Modal de subida de imágenes en lote */}
+      {showBulkImages && (
+        <BulkImageUploadModal
+          onClose={() => setShowBulkImages(false)}
           onDone={() => router.refresh()}
         />
       )}

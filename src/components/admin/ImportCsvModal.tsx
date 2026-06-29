@@ -21,8 +21,9 @@ const HEADERS = [
 ] as const
 
 const TEMPLATE = `nombre,categoria,coleccion,precio,descripcion,talles,colores,stock,imagenes,destacado
-Pants Black,Pantalones,Invierno,57000,"Pantalón de eco cuero con cinto, sofisticado y moderno",36|38|40,Marrón|Negro,3,https://misfotos.com/pants-1.jpg|https://misfotos.com/pants-2.jpg,no
-Body Escote V,Bodies,Juvenil,32000,Body de modal con escote en V,S|M|L,Negro,5,,si
+Pants Black,Pantalones,Invierno,57000,"Pantalón de eco cuero con cinto, sofisticado y moderno",36|38|40,Marrón|Negro,3,pants-black-1.jpg|pants-black-2.jpg,no
+Body Escote V,Bodies,Juvenil,32000,Body de modal con escote en V,S|M|L,Negro,5,body-escote-v.jpg,si
+Remera Print,Remeras,Juvenil,24000,Remera de algodón con estampa,S|M|L|XL,Blanco|Negro,8,,no
 `
 
 // Parser CSV mínimo que respeta comillas dobles (para descripciones con comas)
@@ -191,7 +192,11 @@ export default function ImportCsvModal({
             Una fila por producto. Talles, colores e imágenes separados por{' '}
             <code className="text-bc-black">|</code>. El stock se aplica a cada
             combinación talle × color. Las categorías, colecciones y colores que
-            no existan se crean solos.
+            no existan se crean solos. En{' '}
+            <code className="text-bc-black">imagenes</code> podés poner una URL
+            completa o el nombre del archivo (ej.{' '}
+            <code className="text-bc-black">pants-1.jpg</code>) y subir las fotos
+            después con &laquo;Subir imágenes&raquo;.
           </p>
 
           <div className="flex flex-wrap gap-3 mb-6">

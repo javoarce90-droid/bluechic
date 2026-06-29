@@ -1,0 +1,7 @@
+nombre,categoria,coleccion,precio,descripcion,talles,colores,stock,imagenes,destacado
+Pants Black,Pantalones,Invierno,57000,"Pantalón de eco cuero con cinto, una prenda que combina sofisticación y modernidad. Acabado elegante y duradero.",36|38|40,Marrón|Negro,3,pants-black-1.jpg|pants-black-2.jpg,si
+Blazer Oversize,Blazers,Juvenil,68000,Blazer de corte oversize en paño premium. Estructura impecable y caída fluida.,S|M|L,Negro,4,blazer-oversize.jpg,si
+Body Escote V,Bodies,Juvenil,32000,Body de modal con escote en V profundo. Suave al tacto y silueta favorecedora.,S|M|L,Negro|Blanco,5,body-escote-v.jpg,no
+Remera Print,Remeras,Juvenil,24000,Remera de algodón con estampa exclusiva. Calce relajado.,S|M|L|XL,Blanco|Negro,8,,no
+Vestido Satén Rojo,Vestidos,Invierno,74000,"Vestido de satén con mangas globo y lazo, ideal para ocasiones especiales.",36|38|40|42,Rojo,2,vestido-saten-rojo.jpg,si
+Pantalón Palazzo,Pantalones,Plus30,49000,Pantalón palazzo de tiro alto y caída amplia. Comodidad y elegancia.,40|42|44,Negro|Beige,6,,no

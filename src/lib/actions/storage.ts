@@ -29,3 +29,30 @@ export async function uploadProductImage(formData: FormData) {
 
   return { success: true, url: publicUrl }
 }
+
+// Subida en lote: cada archivo se guarda con su nombre exacto (upsert), de modo
+// que su URL pública coincida con la que ya quedó en la BBDD tras importar el CSV.
+export async function uploadImagesByName(formData: FormData) {
+  const files = formData.getAll('files').filter((f): f is File => f instanceof File)
+  if (files.length === 0) {
+    return { uploaded: 0, results: [] as { name: string; error?: string }[] }
+  }
+
+  const supabase = await createClient()
+  const results: { name: string; error?: string }[] = []
+  let uploaded = 0
+
+  for (const file of files) {
+    const { error } = await supabase.storage
+      .from(BUCKET)
+      .upload(file.name, file, { cacheControl: '3600', upsert: true })
+    if (error) {
+      results.push({ name: file.name, error: error.message })
+    } else {
+      results.push({ name: file.name })
+      uploaded++
+    }
+  }
+
+  return { uploaded, results }
+}

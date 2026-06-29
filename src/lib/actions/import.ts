@@ -25,6 +25,22 @@ export interface ImportResult {
 const isDuplicate = (msg: string) =>
   msg.toLowerCase().includes('duplicate') || msg.includes('23505')
 
+const BUCKET = 'product-images'
+
+// Si el valor es una URL completa se usa tal cual; si es un nombre de archivo
+// (ej. "pants-1.jpg") se resuelve a la URL pública que tendrá en Storage, para
+// poder subir las fotos después y que hagan match por nombre.
+function resolveImages(
+  supabase: Awaited<ReturnType<typeof createClient>>,
+  entries: string[]
+): string[] {
+  return entries.map((entry) => {
+    if (/^https?:\/\//i.test(entry)) return entry
+    const { data } = supabase.storage.from(BUCKET).getPublicUrl(entry)
+    return data.publicUrl
+  })
+}
+
 export async function importProductsCsv(rows: ImportRow[]): Promise<ImportResult> {
   const supabase = await createClient()
 
@@ -93,7 +109,7 @@ export async function importProductsCsv(rows: ImportRow[]): Promise<ImportResult
           description: r.descripcion ?? '',
           featured: r.destacado,
           active: true,
-          images: r.imagenes,
+          images: resolveImages(supabase, r.imagenes),
         })
         .select()
         .single()
