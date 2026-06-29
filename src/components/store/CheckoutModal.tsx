@@ -3,6 +3,7 @@
 import { useState } from 'react'
 import { useCartStore } from '@/store/cart'
 import { createOrder } from '@/lib/actions/orders'
+import { createCheckoutPreference } from '@/lib/actions/mercadopago'
 
 function formatPrice(n: number) {
   return new Intl.NumberFormat('es-AR', {
@@ -20,6 +21,7 @@ export default function CheckoutModal() {
   const [payment, setPayment] = useState<'mp' | 'transfer'>('mp')
   const [isSubmitting, setIsSubmitting] = useState(false)
   const [orderNumber, setOrderNumber] = useState('')
+  const [payError, setPayError] = useState('')
 
   const sub = subtotal()
   const freeShipping = sub >= 200000
@@ -28,6 +30,7 @@ export default function CheckoutModal() {
   async function handleSubmit(e: React.FormEvent<HTMLFormElement>) {
     e.preventDefault()
     setIsSubmitting(true)
+    setPayError('')
 
     const form = e.currentTarget
     const data = new FormData(form)
@@ -46,13 +49,30 @@ export default function CheckoutModal() {
       items,
     })
 
-    setIsSubmitting(false)
-
-    if (result.success && result.orderNumber) {
-      setOrderNumber(result.orderNumber)
-      setStep('success')
-      clearCart()
+    if (!result.success || !result.orderNumber || !result.orderId) {
+      setIsSubmitting(false)
+      setPayError(result.error || 'No se pudo crear el pedido.')
+      return
     }
+
+    // Mercado Pago: creamos la preferencia y redirigimos a la pantalla de pago
+    if (payment === 'mp') {
+      const pref = await createCheckoutPreference(result.orderId)
+      if (pref.success && pref.initPoint) {
+        clearCart()
+        window.location.href = pref.initPoint
+        return
+      }
+      setIsSubmitting(false)
+      setPayError(pref.error || 'No se pudo iniciar el pago con Mercado Pago.')
+      return
+    }
+
+    // Transferencia: mostramos los datos para transferir
+    setIsSubmitting(false)
+    setOrderNumber(result.orderNumber)
+    setStep('success')
+    clearCart()
   }
 
   function handleClose() {
@@ -60,6 +80,7 @@ export default function CheckoutModal() {
     setStep('form')
     setPayment('mp')
     setOrderNumber('')
+    setPayError('')
   }
 
   if (!isCheckoutOpen) return null
@@ -232,6 +253,11 @@ export default function CheckoutModal() {
               </div>
 
               <div className="px-8 pb-8">
+                {payError && (
+                  <div className="mb-3 text-red-500 text-xs tracking-wide text-center">
+                    {payError}
+                  </div>
+                )}
                 <button
                   type="submit"
                   disabled={isSubmitting}
@@ -241,7 +267,11 @@ export default function CheckoutModal() {
                       : 'bg-bc-black text-bc-white hover:bg-bc-accent'
                     }`}
                 >
-                  {isSubmitting ? 'Procesando...' : 'Confirmar pedido'}
+                  {isSubmitting
+                    ? 'Procesando...'
+                    : payment === 'mp'
+                      ? 'Pagar con Mercado Pago'
+                      : 'Confirmar pedido'}
                 </button>
               </div>
             </form>

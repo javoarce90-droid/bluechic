@@ -58,7 +58,7 @@ export async function createOrder(input: CreateOrderInput) {
     return { success: false, error: itemsError.message }
   }
 
-  return { success: true, orderNumber }
+  return { success: true, orderNumber, orderId: order.id as string }
 }
 
 export async function updateOrderStatus(
