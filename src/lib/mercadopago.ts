@@ -8,10 +8,11 @@ export function getMpClient(): MercadoPagoConfig | null {
 }
 
 // URL pública del sitio (para back_urls y notification_url del webhook).
+// Se quita la barra final para no generar dobles barras al concatenar rutas.
 export function getSiteUrl(): string {
-  return (
+  const url =
     process.env.NEXT_PUBLIC_SITE_URL ||
     (process.env.VERCEL_URL ? `https://${process.env.VERCEL_URL}` : '') ||
     'http://localhost:3000'
-  )
+  return url.replace(/\/+$/, '')
 }
