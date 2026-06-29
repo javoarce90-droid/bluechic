@@ -23,7 +23,6 @@ export default function CartDrawer() {
 
   const sub = subtotal()
   const freeShipping = sub >= 200000
-  const total = freeShipping ? sub : sub + 5000
 
   return (
     <>

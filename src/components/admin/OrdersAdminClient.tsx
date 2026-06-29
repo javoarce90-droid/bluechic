@@ -117,10 +117,10 @@ export default function OrdersAdminClient({
         ))}
       </div>
 
-      <div className="flex gap-6">
+      <div className="flex flex-col lg:flex-row gap-6">
         {/* Table */}
-        <div className="flex-1 bg-white border border-bc-gray-200 overflow-hidden">
-          <table className="w-full text-sm">
+        <div className="flex-1 bg-white border border-bc-gray-200 overflow-x-auto">
+          <table className="w-full min-w-[560px] text-sm">
             <thead>
               <tr className="border-b border-bc-gray-200 bg-bc-gray-100">
                 {['Pedido', 'Fecha', 'Cliente', 'Total', 'Pago', 'Estado'].map(
@@ -194,7 +194,7 @@ export default function OrdersAdminClient({
 
         {/* Order detail */}
         {selected && (
-          <div className="w-80 bg-white border border-bc-gray-200 p-5 flex-shrink-0">
+          <div className="w-full lg:w-80 bg-white border border-bc-gray-200 p-5 flex-shrink-0">
             <div className="flex items-center justify-between mb-4">
               <h3 className="text-sm font-light text-bc-black">
                 #{selected.order_number}

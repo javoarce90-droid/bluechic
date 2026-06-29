@@ -124,7 +124,7 @@ export default function CheckoutModal() {
       <div className="fixed inset-0 z-[2501] overflow-y-auto flex items-start justify-center p-4 pt-10">
         <div className="bg-bc-white w-full max-w-2xl relative">
           {/* Header */}
-          <div className="flex items-center justify-between px-8 py-5 border-b border-bc-gray-200">
+          <div className="flex items-center justify-between px-5 sm:px-8 py-5 border-b border-bc-gray-200">
             <h2 className="font-display text-2xl font-light text-bc-black">
               {step === 'success' ? 'Pedido confirmado' : 'Finalizar compra'}
             </h2>
@@ -137,7 +137,7 @@ export default function CheckoutModal() {
 
           {/* Success */}
           {step === 'success' ? (
-            <div className="p-10 text-center space-y-6">
+            <div className="p-6 sm:p-10 text-center space-y-6">
               <div className="w-16 h-16 rounded-full bg-bc-accent/10 flex items-center justify-center mx-auto">
                 <svg className="w-8 h-8 text-bc-accent" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M5 13l4 4L19 7" />
@@ -197,13 +197,13 @@ export default function CheckoutModal() {
             </div>
           ) : (
             <form onSubmit={handleSubmit}>
-              <div className="p-8 space-y-8">
+              <div className="p-5 sm:p-8 space-y-8">
                 {/* Personal data */}
                 <div>
                   <h3 className="text-[10px] tracking-[3px] uppercase text-bc-gray-500 mb-4">
                     Datos personales
                   </h3>
-                  <div className="grid grid-cols-2 gap-4">
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                     <Field name="firstName" label="Nombre" required />
                     <Field name="lastName" label="Apellido" required />
                     <Field name="email" label="Email" type="email" required />
@@ -216,8 +216,8 @@ export default function CheckoutModal() {
                   <h3 className="text-[10px] tracking-[3px] uppercase text-bc-gray-500 mb-4">
                     Dirección de entrega
                   </h3>
-                  <div className="grid grid-cols-2 gap-4">
-                    <div className="col-span-2">
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                    <div className="sm:col-span-2">
                       <Field name="address" label="Calle y número" required />
                     </div>
                     <Field name="apt" label="Piso / Depto (opcional)" />
@@ -326,7 +326,7 @@ export default function CheckoutModal() {
                 </div>
               </div>
 
-              <div className="px-8 pb-8">
+              <div className="px-5 sm:px-8 pb-8">
                 {payError && (
                   <div className="mb-3 text-red-500 text-xs tracking-wide text-center">
                     {payError}

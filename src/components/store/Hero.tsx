@@ -28,12 +28,12 @@ export default function Hero() {
       <div className="absolute inset-0 bg-gradient-to-r from-bc-black/80 via-bc-black/40 to-transparent" />
       <div className="absolute inset-0 bg-gradient-to-t from-bc-black/40 to-transparent" />
 
-      <div className="relative z-10 px-20 max-w-[680px]">
+      <div className="relative z-10 px-6 md:px-20 max-w-[680px]">
         <div className="text-[10px] tracking-[4px] uppercase text-bc-accent font-light mb-4">
           Colección Temporada 2026
         </div>
 
-        <h1 className="font-display text-6xl md:text-7xl lg:text-8xl font-light text-bc-white leading-none mb-6">
+        <h1 className="font-display text-5xl md:text-7xl lg:text-8xl font-light text-bc-white leading-none mb-6">
           Tu estilo,
           <br />
           <em className="italic">tu identidad</em>

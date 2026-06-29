@@ -112,7 +112,7 @@ export default function ProductModal() {
           </div>
 
           {/* Details */}
-          <div className="p-8 flex flex-col justify-between">
+          <div className="p-6 sm:p-8 flex flex-col justify-between">
             <div>
               <div className="flex items-start justify-between mb-4">
                 <div>

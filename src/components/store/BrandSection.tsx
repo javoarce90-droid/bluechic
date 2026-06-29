@@ -22,7 +22,7 @@ export default function BrandSection() {
             Trabajamos con talles reales, materiales nobles y siluetas que
             abrazan el cuerpo de la mujer argentina en toda su diversidad.
           </p>
-          <div className="flex gap-12 pt-4">
+          <div className="flex flex-wrap gap-6 md:gap-12 pt-4">
             {[
               { value: '3+', label: 'Años de trayectoria' },
               { value: '500+', label: 'Clientas satisfechas' },

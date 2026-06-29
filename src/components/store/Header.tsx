@@ -1,5 +1,6 @@
 'use client'
 
+import { useState } from 'react'
 import { useCartStore } from '@/store/cart'
 
 const NAV_ITEMS = [
@@ -42,24 +43,44 @@ function scrollTo(id: string) {
 export default function Header() {
   const { openCart, itemCount } = useCartStore()
   const count = itemCount()
+  const [mobileOpen, setMobileOpen] = useState(false)
+
+  const mobileLinks = [
+    { label: 'Ver todo', href: '#coleccion' },
+    { label: 'Colecciones', href: '#coleccion' },
+    { label: 'Nosotras', href: '#sobre-mi' },
+    { label: 'Contacto', href: '#contacto' },
+  ]
 
   return (
     <header className="sticky top-0 z-[1000] bg-bc-white/95 backdrop-blur-md border-b border-bc-gray-200">
-      <div className="flex items-center justify-between px-10 h-[72px] max-w-[1400px] mx-auto">
+      <div className="flex items-center justify-between px-4 md:px-10 h-[64px] md:h-[72px] max-w-[1400px] mx-auto">
+        {/* Hamburguesa (mobile) */}
+        <button
+          onClick={() => setMobileOpen((v) => !v)}
+          className="md:hidden p-2 -ml-2 text-bc-black"
+          aria-label="Menú"
+        >
+          <svg className="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d={mobileOpen ? 'M6 18L18 6M6 6l12 12' : 'M4 7h16M4 12h16M4 17h16'} />
+          </svg>
+        </button>
+
         {/* Logo */}
         <a
           href="#inicio"
           onClick={(e) => {
             e.preventDefault()
             scrollTo('#inicio')
+            setMobileOpen(false)
           }}
-          className="font-display text-[28px] font-light tracking-[6px] uppercase text-bc-black hover:opacity-80 transition-opacity"
+          className="font-display text-xl md:text-[28px] font-light tracking-[3px] md:tracking-[6px] uppercase text-bc-black hover:opacity-80 transition-opacity"
         >
           Blue<span className="text-bc-accent">·</span>Chic
         </a>
 
-        {/* Nav */}
-        <nav className="flex items-center">
+        {/* Nav (desktop) */}
+        <nav className="hidden md:flex items-center">
           {NAV_ITEMS.map((item) => (
             <div key={item.label} className="relative group">
               <button className="px-[18px] h-[72px] flex items-center text-[10px] tracking-[2.5px] uppercase font-normal text-bc-gray-700 hover:text-bc-black transition-colors">
@@ -143,6 +164,26 @@ export default function Header() {
           </button>
         </div>
       </div>
+
+      {/* Menú mobile */}
+      {mobileOpen && (
+        <nav className="md:hidden border-t border-bc-gray-200 bg-bc-white">
+          {mobileLinks.map((link) => (
+            <a
+              key={link.label}
+              href={link.href}
+              onClick={(e) => {
+                e.preventDefault()
+                scrollTo(link.href)
+                setMobileOpen(false)
+              }}
+              className="block px-5 py-4 text-[12px] tracking-[2px] uppercase font-light text-bc-gray-700 border-b border-bc-gray-100 active:bg-bc-gray-100"
+            >
+              {link.label}
+            </a>
+          ))}
+        </nav>
+      )}
     </header>
   )
 }

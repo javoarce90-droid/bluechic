@@ -287,23 +287,24 @@ export default function ProductsAdminClient({
   return (
     <div>
       {/* Header */}
-      <div className="flex items-center justify-between mb-8">
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-8">
         <div>
           <h1 className="text-2xl font-light text-bc-black">Productos</h1>
           <p className="text-sm text-bc-gray-500 mt-1">
             {products.length} producto{products.length !== 1 ? 's' : ''}
           </p>
         </div>
-        <div className="flex gap-3">
+        <div className="flex flex-wrap gap-3">
           <button
             onClick={() => setShowBulkImages(true)}
             className="px-5 py-2.5 border border-bc-gray-300 text-bc-black text-[10px] tracking-[2px] uppercase font-light hover:border-bc-black transition-colors"
           >
             Subir imágenes
           </button>
+          {/* La importación CSV se hace desde la compu */}
           <button
             onClick={() => setShowImport(true)}
-            className="px-5 py-2.5 border border-bc-gray-300 text-bc-black text-[10px] tracking-[2px] uppercase font-light hover:border-bc-black transition-colors"
+            className="hidden md:inline-block px-5 py-2.5 border border-bc-gray-300 text-bc-black text-[10px] tracking-[2px] uppercase font-light hover:border-bc-black transition-colors"
           >
             Importar CSV
           </button>
@@ -317,8 +318,8 @@ export default function ProductsAdminClient({
       </div>
 
       {/* Table */}
-      <div className="bg-white border border-bc-gray-200 overflow-hidden">
-        <table className="w-full text-sm">
+      <div className="bg-white border border-bc-gray-200 overflow-x-auto">
+        <table className="w-full min-w-[640px] text-sm">
           <thead>
             <tr className="border-b border-bc-gray-200 bg-bc-gray-100">
               {['Producto', 'Categoría', 'Precio', 'Colección', 'Stock', 'Estado', ''].map(
@@ -407,8 +408,8 @@ export default function ProductsAdminClient({
             className="fixed inset-0 z-[3000] bg-black/30"
             onClick={() => setShowForm(false)}
           />
-          <div className="fixed inset-0 z-[3001] flex items-start justify-center p-4 overflow-y-auto">
-            <div className="bg-white w-full max-w-2xl p-8 my-8">
+          <div className="fixed inset-0 z-[3001] flex items-start justify-center p-3 sm:p-4 overflow-y-auto">
+            <div className="bg-white w-full max-w-2xl p-5 sm:p-8 my-4 sm:my-8">
               <h2 className="text-xl font-light text-bc-black mb-6">
                 {editingProduct ? 'Editar producto' : 'Nuevo producto'}
               </h2>
@@ -430,7 +431,7 @@ export default function ProductsAdminClient({
                   />
                 </div>
 
-                <div className="grid grid-cols-2 gap-4">
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                   <div>
                     <label className="flex items-center justify-between text-[9px] tracking-[2px] uppercase text-bc-gray-500 mb-1.5">
                       Categoría
