@@ -2,23 +2,25 @@
 
 import { useState } from 'react'
 import ProductCard from './ProductCard'
-import type { Product, ProductCategory, ProductCollection } from '@/types'
+import type { Product, Category, Collection } from '@/types'
 
-type Filter = 'all' | ProductCategory | ProductCollection
+export default function CollectionSection({
+  products,
+  categories,
+  collections,
+}: {
+  products: Product[]
+  categories: Category[]
+  collections: Collection[]
+}) {
+  const [activeFilter, setActiveFilter] = useState<string>('all')
 
-const TABS: { id: Filter; label: string }[] = [
-  { id: 'all', label: 'Todo' },
-  { id: 'juvenil', label: 'Juvenil' },
-  { id: 'plus30', label: '+30' },
-  { id: 'blazers', label: 'Blazers' },
-  { id: 'remeras', label: 'Remeras' },
-  { id: 'pantalones', label: 'Pantalones' },
-  { id: 'bodies', label: 'Bodies' },
-  { id: 'vestidos', label: 'Vestidos' },
-]
-
-export default function CollectionSection({ products }: { products: Product[] }) {
-  const [activeFilter, setActiveFilter] = useState<Filter>('all')
+  // Tabs dinámicos: colecciones primero, luego categorías (filtran por slug)
+  const tabs = [
+    { id: 'all', label: 'Todo' },
+    ...collections.map((c) => ({ id: c.slug, label: c.name })),
+    ...categories.map((c) => ({ id: c.slug, label: c.name })),
+  ]
 
   const filtered =
     activeFilter === 'all'
@@ -44,7 +46,7 @@ export default function CollectionSection({ products }: { products: Product[] })
 
           {/* Filter tabs */}
           <div className="flex flex-wrap gap-0 border-b border-bc-gray-200">
-            {TABS.map((tab) => (
+            {tabs.map((tab) => (
               <button
                 key={tab.id}
                 onClick={() => setActiveFilter(tab.id)}

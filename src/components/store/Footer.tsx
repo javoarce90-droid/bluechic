@@ -30,7 +30,7 @@ export default function Footer() {
             </p>
             <div className="flex gap-4 mt-6">
               <a
-                href="https://instagram.com/bluechicok"
+                href="https://instagram.com/bluechic.ok"
                 target="_blank"
                 rel="noopener noreferrer"
                 className="text-bc-gray-500 hover:text-bc-white transition-colors"
@@ -40,7 +40,7 @@ export default function Footer() {
                 </svg>
               </a>
               <a
-                href="https://wa.me/5491100000000"
+                href="https://wa.me/5491158508509"
                 target="_blank"
                 rel="noopener noreferrer"
                 className="text-bc-gray-500 hover:text-bc-white transition-colors"
@@ -109,7 +109,7 @@ export default function Footer() {
               </li>
               <li>
                 <a
-                  href="https://wa.me/5491100000000"
+                  href="https://wa.me/5491158508509"
                   target="_blank"
                   rel="noopener noreferrer"
                   className="text-[11px] text-bc-gray-500 hover:text-bc-white transition-colors tracking-wide"
@@ -119,12 +119,12 @@ export default function Footer() {
               </li>
               <li>
                 <a
-                  href="https://instagram.com/bluechicok"
+                  href="https://instagram.com/bluechic.ok"
                   target="_blank"
                   rel="noopener noreferrer"
                   className="text-[11px] text-bc-gray-500 hover:text-bc-white transition-colors tracking-wide"
                 >
-                  @bluechicok
+                  @bluechic.ok
                 </a>
               </li>
             </ul>

@@ -119,7 +119,7 @@ export default function CheckoutModal() {
               )}
               {payment === 'transfer' && (
                 <a
-                  href="https://wa.me/5491100000000"
+                  href="https://wa.me/5491158508509"
                   target="_blank"
                   rel="noopener noreferrer"
                   className="inline-block px-8 py-3 text-[11px] tracking-[3px] uppercase font-light"

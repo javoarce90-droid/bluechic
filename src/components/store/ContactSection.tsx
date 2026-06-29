@@ -31,7 +31,7 @@ export default function ContactSection() {
           <div className="space-y-5 pt-4">
             {[
               { icon: '✉', label: 'Email', value: 'hola@bluechic.com.ar' },
-              { icon: '📱', label: 'WhatsApp', value: '+54 9 11 0000-0000' },
+              { icon: '📱', label: 'WhatsApp', value: '+54 9 11 5850-8509' },
               { icon: '📍', label: 'Ubicación', value: 'Buenos Aires, Argentina' },
               { icon: '🕐', label: 'Horario', value: 'Lun–Vie, 10:00–18:00' },
             ].map(({ icon, label, value }) => (
@@ -51,7 +51,7 @@ export default function ContactSection() {
 
           <div className="pt-4">
             <a
-              href="https://wa.me/5491100000000"
+              href="https://wa.me/5491158508509"
               target="_blank"
               rel="noopener noreferrer"
               className="inline-flex items-center gap-2 px-6 py-3 border border-bc-gray-600 text-bc-gray-200 text-[10px] tracking-[3px] uppercase font-light hover:border-bc-white hover:text-bc-white transition-colors"

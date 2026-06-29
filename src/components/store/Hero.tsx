@@ -1,5 +1,7 @@
 'use client'
 
+import Image from 'next/image'
+
 function scrollTo(id: string) {
   const el = document.querySelector(id)
   if (el) el.scrollIntoView({ behavior: 'smooth' })
@@ -12,9 +14,19 @@ export default function Hero() {
       className="relative flex items-center bg-bc-gray-900 overflow-hidden"
       style={{ height: 'calc(100vh - 108px)', minHeight: '600px' }}
     >
-      {/* Placeholder background — reemplazar con imagen real */}
-      <div className="absolute inset-0 bg-gradient-to-br from-bc-gray-900 via-bc-gray-700 to-bc-gray-900 opacity-90" />
-      <div className="absolute inset-0 bg-gradient-to-r from-bc-black/70 to-transparent" />
+      {/* Imagen de portada */}
+      <Image
+        src="/hero.jpg"
+        alt="Blue Chic — Colección 2026"
+        fill
+        priority
+        sizes="100vw"
+        className="object-cover"
+        style={{ objectPosition: '70% 20%' }}
+      />
+      {/* Overlays para legibilidad del texto sobre la imagen */}
+      <div className="absolute inset-0 bg-gradient-to-r from-bc-black/80 via-bc-black/40 to-transparent" />
+      <div className="absolute inset-0 bg-gradient-to-t from-bc-black/40 to-transparent" />
 
       <div className="relative z-10 px-20 max-w-[680px]">
         <div className="text-[10px] tracking-[4px] uppercase text-bc-accent font-light mb-4">

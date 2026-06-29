@@ -49,7 +49,7 @@ export default function AboutSection() {
               Fundadora de Blue Chic
             </div>
             <div className="text-[10px] tracking-[2px] uppercase text-bc-gray-500 mt-1">
-              @bluechicok
+              @bluechic.ok
             </div>
           </div>
         </div>

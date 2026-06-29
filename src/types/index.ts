@@ -1,8 +1,32 @@
-export type ProductCategory = 'blazers' | 'bodies' | 'remeras' | 'pantalones' | 'vestidos'
-export type ProductCollection = 'juvenil' | 'plus30'
-export type ProductSize = 'XS' | 'S' | 'M' | 'L' | 'XL'
+// Categoría, colección y talle ahora son dinámicos (administrables desde el panel)
+export type ProductCategory = string
+export type ProductCollection = string
+export type ProductSize = string
 export type PaymentMethod = 'mp' | 'transfer'
 export type OrderStatus = 'pending' | 'confirmed' | 'shipped' | 'delivered' | 'cancelled'
+
+export interface Category {
+  id: string
+  name: string
+  slug: string
+  sort: number
+  created_at: string
+}
+
+export interface Collection {
+  id: string
+  name: string
+  slug: string
+  sort: number
+  created_at: string
+}
+
+export interface Color {
+  id: string
+  name: string
+  hex: string | null
+  created_at: string
+}
 
 export interface ProductVariant {
   id: string

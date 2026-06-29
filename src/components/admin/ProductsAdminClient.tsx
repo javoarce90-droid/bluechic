@@ -2,24 +2,20 @@
 
 import { useState } from 'react'
 import { useRouter } from 'next/navigation'
-import type { Product, ProductCategory, ProductCollection, ProductSize } from '@/types'
+import type { Product, Category, Collection, Color } from '@/types'
+import { slugify } from '@/lib/slug'
 import {
   createProduct,
   updateProduct,
   deleteProduct,
-  upsertVariant,
-  deleteVariant,
+  replaceVariants,
 } from '@/lib/actions/products'
-
-const CATEGORIES: ProductCategory[] = [
-  'blazers',
-  'bodies',
-  'remeras',
-  'pantalones',
-  'vestidos',
-]
-const COLLECTIONS: ProductCollection[] = ['juvenil', 'plus30']
-const SIZES: ProductSize[] = ['XS', 'S', 'M', 'L', 'XL']
+import {
+  createCategory,
+  createCollection,
+  createColor,
+} from '@/lib/actions/taxonomy'
+import { uploadProductImage } from '@/lib/actions/storage'
 
 function formatPrice(n: number) {
   return new Intl.NumberFormat('es-AR', {
@@ -29,48 +25,63 @@ function formatPrice(n: number) {
   }).format(n)
 }
 
-function slugify(str: string) {
-  return str
-    .toLowerCase()
-    .normalize('NFD')
-    .replace(/[̀-ͯ]/g, '')
-    .replace(/\s+/g, '-')
-    .replace(/[^a-z0-9-]/g, '')
+function variantKey(size: string, color: string) {
+  return `${size}|||${color}`
 }
 
 export default function ProductsAdminClient({
   initialProducts,
+  initialCategories,
+  initialCollections,
+  initialColors,
 }: {
   initialProducts: Product[]
+  initialCategories: Category[]
+  initialCollections: Collection[]
+  initialColors: Color[]
 }) {
   const router = useRouter()
   const [products, setProducts] = useState(initialProducts)
+  const [categories, setCategories] = useState(initialCategories)
+  const [collections, setCollections] = useState(initialCollections)
+  const [colors, setColors] = useState(initialColors)
+
   const [showForm, setShowForm] = useState(false)
   const [editingProduct, setEditingProduct] = useState<Product | null>(null)
-  const [selectedProduct, setSelectedProduct] = useState<Product | null>(null)
+  const [error, setError] = useState('')
 
   // Form state
   const [name, setName] = useState('')
-  const [category, setCategory] = useState<ProductCategory>('remeras')
-  const [collection, setCollection] = useState<ProductCollection>('juvenil')
+  const [category, setCategory] = useState('')
+  const [collection, setCollection] = useState('')
   const [price, setPrice] = useState('')
   const [description, setDescription] = useState('')
   const [featured, setFeatured] = useState(false)
+  const [images, setImages] = useState<string[]>([])
+  const [sizes, setSizes] = useState<string[]>([])
+  const [sizeInput, setSizeInput] = useState('')
+  const [selectedColors, setSelectedColors] = useState<string[]>([])
+  const [stock, setStock] = useState<Record<string, string>>({})
+  const [uploading, setUploading] = useState(false)
   const [saving, setSaving] = useState(false)
 
-  // Variant form
-  const [variantSize, setVariantSize] = useState<ProductSize>('S')
-  const [variantColor, setVariantColor] = useState('')
-  const [variantStock, setVariantStock] = useState('0')
-  const [savingVariant, setSavingVariant] = useState(false)
-
-  function openCreate() {
+  function resetForm() {
     setName('')
-    setCategory('remeras')
-    setCollection('juvenil')
+    setCategory(categories[0]?.slug ?? '')
+    setCollection(collections[0]?.slug ?? '')
     setPrice('')
     setDescription('')
     setFeatured(false)
+    setImages([])
+    setSizes([])
+    setSizeInput('')
+    setSelectedColors([])
+    setStock({})
+    setError('')
+  }
+
+  function openCreate() {
+    resetForm()
     setEditingProduct(null)
     setShowForm(true)
   }
@@ -82,13 +93,103 @@ export default function ProductsAdminClient({
     setPrice(product.price.toString())
     setDescription(product.description)
     setFeatured(product.featured)
+    setImages(product.images ?? [])
+
+    const vSizes = [...new Set((product.variants ?? []).map((v) => v.size))]
+    const vColors = [...new Set((product.variants ?? []).map((v) => v.color))]
+    const grid: Record<string, string> = {}
+    for (const v of product.variants ?? []) {
+      grid[variantKey(v.size, v.color)] = v.stock.toString()
+    }
+    setSizes(vSizes)
+    setSelectedColors(vColors)
+    setStock(grid)
+    setSizeInput('')
+    setError('')
     setEditingProduct(product)
     setShowForm(true)
   }
 
+  // ─── Talles (texto libre) ───────────────────────────────────────────────────
+  function addSize() {
+    const s = sizeInput.trim()
+    if (!s || sizes.includes(s)) {
+      setSizeInput('')
+      return
+    }
+    setSizes((prev) => [...prev, s])
+    setSizeInput('')
+  }
+
+  function removeSize(s: string) {
+    setSizes((prev) => prev.filter((x) => x !== s))
+  }
+
+  function toggleColor(colorName: string) {
+    setSelectedColors((prev) =>
+      prev.includes(colorName)
+        ? prev.filter((c) => c !== colorName)
+        : [...prev, colorName]
+    )
+  }
+
+  // ─── Altas inline ───────────────────────────────────────────────────────────
+  async function handleAddCategory() {
+    const value = prompt('Nombre de la nueva categoría:')
+    if (!value?.trim()) return
+    const res = await createCategory(value)
+    if (!res.success) return setError(res.error || 'Error al crear categoría')
+    setCategories((prev) => [...prev, res.category!])
+    setCategory(res.category!.slug)
+  }
+
+  async function handleAddCollection() {
+    const value = prompt('Nombre de la nueva colección:')
+    if (!value?.trim()) return
+    const res = await createCollection(value)
+    if (!res.success) return setError(res.error || 'Error al crear colección')
+    setCollections((prev) => [...prev, res.collection!])
+    setCollection(res.collection!.slug)
+  }
+
+  async function handleAddColor() {
+    const value = prompt('Nombre del nuevo color:')
+    if (!value?.trim()) return
+    const res = await createColor(value)
+    if (!res.success) return setError(res.error || 'Error al crear color')
+    setColors((prev) => [...prev, res.color!])
+    setSelectedColors((prev) => [...prev, res.color!.name])
+  }
+
+  // ─── Imágenes ───────────────────────────────────────────────────────────────
+  async function handleUpload(e: React.ChangeEvent<HTMLInputElement>) {
+    const files = e.target.files
+    if (!files || files.length === 0) return
+    setUploading(true)
+    setError('')
+    for (const file of Array.from(files)) {
+      const fd = new FormData()
+      fd.append('file', file)
+      const res = await uploadProductImage(fd)
+      if (res.success && res.url) {
+        setImages((prev) => [...prev, res.url!])
+      } else {
+        setError(res.error || 'Error al subir la imagen')
+      }
+    }
+    setUploading(false)
+    e.target.value = ''
+  }
+
+  function removeImage(url: string) {
+    setImages((prev) => prev.filter((u) => u !== url))
+  }
+
+  // ─── Guardar producto ───────────────────────────────────────────────────────
   async function handleSaveProduct(e: React.FormEvent) {
     e.preventDefault()
     setSaving(true)
+    setError('')
 
     const payload = {
       name,
@@ -98,12 +199,39 @@ export default function ProductsAdminClient({
       price: parseFloat(price),
       description,
       featured,
+      images,
     }
 
+    let productId = editingProduct?.id
     if (editingProduct) {
-      await updateProduct(editingProduct.id, payload)
+      const res = await updateProduct(editingProduct.id, payload)
+      if (!res.success) {
+        setSaving(false)
+        return setError(res.error || 'Error al guardar el producto')
+      }
     } else {
-      await createProduct(payload)
+      const res = await createProduct(payload)
+      if (!res.success || !res.product) {
+        setSaving(false)
+        return setError(res.error || 'Error al crear el producto')
+      }
+      productId = res.product.id
+    }
+
+    // Grilla de variantes: producto cartesiano talle × color
+    if (productId) {
+      const variants = sizes.flatMap((size) =>
+        selectedColors.map((color) => ({
+          size,
+          color,
+          stock: parseInt(stock[variantKey(size, color)] || '0') || 0,
+        }))
+      )
+      const vRes = await replaceVariants(productId, variants)
+      if (!vRes.success) {
+        setSaving(false)
+        return setError(vRes.error || 'Error al guardar el stock')
+      }
     }
 
     setSaving(false)
@@ -115,40 +243,19 @@ export default function ProductsAdminClient({
     if (!confirm('¿Eliminar este producto?')) return
     await deleteProduct(id)
     setProducts((prev) => prev.filter((p) => p.id !== id))
-    if (selectedProduct?.id === id) setSelectedProduct(null)
   }
 
   async function handleToggleActive(product: Product) {
     await updateProduct(product.id, { active: !product.active })
     setProducts((prev) =>
-      prev.map((p) =>
-        p.id === product.id ? { ...p, active: !p.active } : p
-      )
+      prev.map((p) => (p.id === product.id ? { ...p, active: !p.active } : p))
     )
   }
 
-  async function handleAddVariant(e: React.FormEvent) {
-    e.preventDefault()
-    if (!selectedProduct) return
-    setSavingVariant(true)
-
-    await upsertVariant({
-      product_id: selectedProduct.id,
-      size: variantSize,
-      color: variantColor.trim(),
-      stock: parseInt(variantStock),
-    })
-
-    setSavingVariant(false)
-    setVariantColor('')
-    setVariantStock('0')
-    router.refresh()
-  }
-
-  async function handleDeleteVariant(variantId: string) {
-    await deleteVariant(variantId)
-    router.refresh()
-  }
+  const categoryLabel = (slug: string) =>
+    categories.find((c) => c.slug === slug)?.name ?? slug
+  const collectionLabel = (slug: string) =>
+    collections.find((c) => c.slug === slug)?.name ?? slug
 
   return (
     <div>
@@ -168,37 +275,31 @@ export default function ProductsAdminClient({
         </button>
       </div>
 
-      <div className="flex gap-6">
-        {/* Table */}
-        <div className="flex-1 bg-white border border-bc-gray-200 overflow-hidden">
-          <table className="w-full text-sm">
-            <thead>
-              <tr className="border-b border-bc-gray-200 bg-bc-gray-100">
-                {['Producto', 'Categoría', 'Precio', 'Colección', 'Estado', ''].map(
-                  (h) => (
-                    <th
-                      key={h}
-                      className="text-left px-4 py-3 text-[9px] tracking-[2px] uppercase text-bc-gray-500 font-normal"
-                    >
-                      {h}
-                    </th>
-                  )
-                )}
-              </tr>
-            </thead>
-            <tbody className="divide-y divide-bc-gray-100">
-              {products.map((product) => (
-                <tr
-                  key={product.id}
-                  className={`hover:bg-bc-gray-100 cursor-pointer transition-colors ${
-                    selectedProduct?.id === product.id ? 'bg-bc-gray-100' : ''
-                  }`}
-                  onClick={() =>
-                    setSelectedProduct(
-                      selectedProduct?.id === product.id ? null : product
-                    )
-                  }
-                >
+      {/* Table */}
+      <div className="bg-white border border-bc-gray-200 overflow-hidden">
+        <table className="w-full text-sm">
+          <thead>
+            <tr className="border-b border-bc-gray-200 bg-bc-gray-100">
+              {['Producto', 'Categoría', 'Precio', 'Colección', 'Stock', 'Estado', ''].map(
+                (h) => (
+                  <th
+                    key={h}
+                    className="text-left px-4 py-3 text-[9px] tracking-[2px] uppercase text-bc-gray-500 font-normal"
+                  >
+                    {h}
+                  </th>
+                )
+              )}
+            </tr>
+          </thead>
+          <tbody className="divide-y divide-bc-gray-100">
+            {products.map((product) => {
+              const totalStock = (product.variants ?? []).reduce(
+                (sum, v) => sum + v.stock,
+                0
+              )
+              return (
+                <tr key={product.id} className="hover:bg-bc-gray-100 transition-colors">
                   <td className="px-4 py-3 font-light text-bc-black">
                     {product.name}
                     {product.featured && (
@@ -207,21 +308,19 @@ export default function ProductsAdminClient({
                       </span>
                     )}
                   </td>
-                  <td className="px-4 py-3 text-bc-gray-500 capitalize">
-                    {product.category}
+                  <td className="px-4 py-3 text-bc-gray-500">
+                    {categoryLabel(product.category)}
                   </td>
                   <td className="px-4 py-3 text-bc-black font-light">
                     {formatPrice(product.price)}
                   </td>
                   <td className="px-4 py-3 text-bc-gray-500">
-                    {product.collection}
+                    {collectionLabel(product.collection)}
                   </td>
+                  <td className="px-4 py-3 text-bc-gray-500">{totalStock}</td>
                   <td className="px-4 py-3">
                     <button
-                      onClick={(e) => {
-                        e.stopPropagation()
-                        handleToggleActive(product)
-                      }}
+                      onClick={() => handleToggleActive(product)}
                       className={`text-[9px] tracking-[1px] uppercase px-2 py-1 rounded ${
                         product.active
                           ? 'bg-green-100 text-green-700'
@@ -232,7 +331,7 @@ export default function ProductsAdminClient({
                     </button>
                   </td>
                   <td className="px-4 py-3">
-                    <div className="flex gap-3" onClick={(e) => e.stopPropagation()}>
+                    <div className="flex gap-3">
                       <button
                         onClick={() => openEdit(product)}
                         className="text-[10px] uppercase tracking-wide text-bc-gray-500 hover:text-bc-black transition-colors"
@@ -248,119 +347,14 @@ export default function ProductsAdminClient({
                     </div>
                   </td>
                 </tr>
-              ))}
-            </tbody>
-          </table>
+              )
+            })}
+          </tbody>
+        </table>
 
-          {products.length === 0 && (
-            <div className="py-16 text-center text-bc-gray-500 text-sm font-light">
-              No hay productos. Creá uno con el botón de arriba.
-            </div>
-          )}
-        </div>
-
-        {/* Variant panel */}
-        {selectedProduct && (
-          <div className="w-72 bg-white border border-bc-gray-200 p-5 flex-shrink-0">
-            <h3 className="text-sm font-light text-bc-black mb-1">
-              {selectedProduct.name}
-            </h3>
-            <div className="text-[9px] tracking-[2px] uppercase text-bc-gray-500 mb-5">
-              Stock por variante
-            </div>
-
-            {/* Existing variants */}
-            {(selectedProduct.variants?.length ?? 0) > 0 ? (
-              <div className="space-y-2 mb-5">
-                {selectedProduct.variants!.map((v) => (
-                  <div
-                    key={v.id}
-                    className="flex items-center justify-between text-xs py-1.5 border-b border-bc-gray-100"
-                  >
-                    <span className="text-bc-gray-700 font-light">
-                      {v.size} / {v.color}
-                    </span>
-                    <div className="flex items-center gap-3">
-                      <span
-                        className={`font-medium ${
-                          v.stock === 0
-                            ? 'text-red-500'
-                            : v.stock <= 3
-                              ? 'text-bc-accent'
-                              : 'text-green-600'
-                        }`}
-                      >
-                        {v.stock}
-                      </span>
-                      <button
-                        onClick={() => handleDeleteVariant(v.id)}
-                        className="text-bc-gray-400 hover:text-red-500 transition-colors"
-                      >
-                        ×
-                      </button>
-                    </div>
-                  </div>
-                ))}
-              </div>
-            ) : (
-              <p className="text-xs text-bc-gray-500 font-light mb-5">
-                Sin variantes. Agregá talle y color.
-              </p>
-            )}
-
-            {/* Add variant */}
-            <form onSubmit={handleAddVariant} className="space-y-3">
-              <div className="text-[9px] tracking-[2px] uppercase text-bc-gray-500 mb-2">
-                Agregar / actualizar variante
-              </div>
-              <div>
-                <label className="block text-[9px] tracking-[1px] uppercase text-bc-gray-500 mb-1">
-                  Talle
-                </label>
-                <select
-                  value={variantSize}
-                  onChange={(e) => setVariantSize(e.target.value as ProductSize)}
-                  className="w-full border border-bc-gray-200 px-2 py-1.5 text-xs text-bc-black focus:border-bc-black outline-none"
-                >
-                  {SIZES.map((s) => (
-                    <option key={s} value={s}>
-                      {s}
-                    </option>
-                  ))}
-                </select>
-              </div>
-              <div>
-                <label className="block text-[9px] tracking-[1px] uppercase text-bc-gray-500 mb-1">
-                  Color
-                </label>
-                <input
-                  value={variantColor}
-                  onChange={(e) => setVariantColor(e.target.value)}
-                  placeholder="ej: Negro"
-                  required
-                  className="w-full border border-bc-gray-200 px-2 py-1.5 text-xs text-bc-black focus:border-bc-black outline-none"
-                />
-              </div>
-              <div>
-                <label className="block text-[9px] tracking-[1px] uppercase text-bc-gray-500 mb-1">
-                  Stock
-                </label>
-                <input
-                  type="number"
-                  min="0"
-                  value={variantStock}
-                  onChange={(e) => setVariantStock(e.target.value)}
-                  className="w-full border border-bc-gray-200 px-2 py-1.5 text-xs text-bc-black focus:border-bc-black outline-none"
-                />
-              </div>
-              <button
-                type="submit"
-                disabled={savingVariant}
-                className="w-full py-2 bg-bc-black text-bc-white text-[9px] tracking-[2px] uppercase font-light hover:bg-bc-accent transition-colors disabled:opacity-50"
-              >
-                {savingVariant ? 'Guardando...' : 'Guardar variante'}
-              </button>
-            </form>
+        {products.length === 0 && (
+          <div className="py-16 text-center text-bc-gray-500 text-sm font-light">
+            No hay productos. Creá uno con el botón de arriba.
           </div>
         )}
       </div>
@@ -372,13 +366,17 @@ export default function ProductsAdminClient({
             className="fixed inset-0 z-50 bg-black/30"
             onClick={() => setShowForm(false)}
           />
-          <div className="fixed inset-0 z-[51] flex items-center justify-center p-4">
-            <div className="bg-white w-full max-w-lg p-8">
+          <div className="fixed inset-0 z-[51] flex items-start justify-center p-4 overflow-y-auto">
+            <div className="bg-white w-full max-w-2xl p-8 my-8">
               <h2 className="text-xl font-light text-bc-black mb-6">
                 {editingProduct ? 'Editar producto' : 'Nuevo producto'}
               </h2>
 
-              <form onSubmit={handleSaveProduct} className="space-y-4">
+              {error && (
+                <div className="mb-4 text-red-500 text-xs tracking-wide">{error}</div>
+              )}
+
+              <form onSubmit={handleSaveProduct} className="space-y-5">
                 <div>
                   <label className="block text-[9px] tracking-[2px] uppercase text-bc-gray-500 mb-1.5">
                     Nombre
@@ -393,37 +391,55 @@ export default function ProductsAdminClient({
 
                 <div className="grid grid-cols-2 gap-4">
                   <div>
-                    <label className="block text-[9px] tracking-[2px] uppercase text-bc-gray-500 mb-1.5">
+                    <label className="flex items-center justify-between text-[9px] tracking-[2px] uppercase text-bc-gray-500 mb-1.5">
                       Categoría
+                      <button
+                        type="button"
+                        onClick={handleAddCategory}
+                        className="text-bc-accent normal-case tracking-normal text-[10px]"
+                      >
+                        + nueva
+                      </button>
                     </label>
                     <select
+                      required
                       value={category}
-                      onChange={(e) =>
-                        setCategory(e.target.value as ProductCategory)
-                      }
-                      className="w-full border border-bc-gray-200 px-3 py-2 text-sm font-light focus:border-bc-black outline-none capitalize"
+                      onChange={(e) => setCategory(e.target.value)}
+                      className="w-full border border-bc-gray-200 px-3 py-2 text-sm font-light focus:border-bc-black outline-none"
                     >
-                      {CATEGORIES.map((c) => (
-                        <option key={c} value={c}>
-                          {c}
+                      <option value="" disabled>
+                        Elegir…
+                      </option>
+                      {categories.map((c) => (
+                        <option key={c.id} value={c.slug}>
+                          {c.name}
                         </option>
                       ))}
                     </select>
                   </div>
                   <div>
-                    <label className="block text-[9px] tracking-[2px] uppercase text-bc-gray-500 mb-1.5">
+                    <label className="flex items-center justify-between text-[9px] tracking-[2px] uppercase text-bc-gray-500 mb-1.5">
                       Colección
+                      <button
+                        type="button"
+                        onClick={handleAddCollection}
+                        className="text-bc-accent normal-case tracking-normal text-[10px]"
+                      >
+                        + nueva
+                      </button>
                     </label>
                     <select
+                      required
                       value={collection}
-                      onChange={(e) =>
-                        setCollection(e.target.value as ProductCollection)
-                      }
+                      onChange={(e) => setCollection(e.target.value)}
                       className="w-full border border-bc-gray-200 px-3 py-2 text-sm font-light focus:border-bc-black outline-none"
                     >
-                      {COLLECTIONS.map((c) => (
-                        <option key={c} value={c}>
-                          {c}
+                      <option value="" disabled>
+                        Elegir…
+                      </option>
+                      {collections.map((c) => (
+                        <option key={c.id} value={c.slug}>
+                          {c.name}
                         </option>
                       ))}
                     </select>
@@ -456,6 +472,180 @@ export default function ProductsAdminClient({
                   />
                 </div>
 
+                {/* Imágenes */}
+                <div>
+                  <label className="block text-[9px] tracking-[2px] uppercase text-bc-gray-500 mb-1.5">
+                    Imágenes
+                  </label>
+                  <div className="flex flex-wrap gap-3 items-center">
+                    {images.map((url) => (
+                      <div key={url} className="relative w-20 h-24">
+                        {/* eslint-disable-next-line @next/next/no-img-element */}
+                        <img
+                          src={url}
+                          alt=""
+                          className="w-full h-full object-cover border border-bc-gray-200"
+                        />
+                        <button
+                          type="button"
+                          onClick={() => removeImage(url)}
+                          className="absolute -top-2 -right-2 w-5 h-5 bg-bc-black text-bc-white text-xs rounded-full"
+                        >
+                          ×
+                        </button>
+                      </div>
+                    ))}
+                    <label className="w-20 h-24 border border-dashed border-bc-gray-300 flex items-center justify-center cursor-pointer text-[9px] tracking-[1px] uppercase text-bc-gray-500 hover:border-bc-black transition-colors text-center">
+                      {uploading ? 'Subiendo…' : '+ Subir'}
+                      <input
+                        type="file"
+                        accept="image/*"
+                        multiple
+                        onChange={handleUpload}
+                        className="hidden"
+                        disabled={uploading}
+                      />
+                    </label>
+                  </div>
+                </div>
+
+                {/* Talles */}
+                <div>
+                  <label className="block text-[9px] tracking-[2px] uppercase text-bc-gray-500 mb-1.5">
+                    Talles
+                  </label>
+                  <div className="flex flex-wrap gap-2 mb-2">
+                    {sizes.map((s) => (
+                      <span
+                        key={s}
+                        className="inline-flex items-center gap-1.5 bg-bc-gray-100 px-2.5 py-1 text-xs"
+                      >
+                        {s}
+                        <button
+                          type="button"
+                          onClick={() => removeSize(s)}
+                          className="text-bc-gray-400 hover:text-red-500"
+                        >
+                          ×
+                        </button>
+                      </span>
+                    ))}
+                  </div>
+                  <div className="flex gap-2">
+                    <input
+                      value={sizeInput}
+                      onChange={(e) => setSizeInput(e.target.value)}
+                      onKeyDown={(e) => {
+                        if (e.key === 'Enter') {
+                          e.preventDefault()
+                          addSize()
+                        }
+                      }}
+                      placeholder="ej: 36, 38, S, M…"
+                      className="flex-1 border border-bc-gray-200 px-3 py-2 text-sm font-light focus:border-bc-black outline-none"
+                    />
+                    <button
+                      type="button"
+                      onClick={addSize}
+                      className="px-4 border border-bc-gray-200 text-sm hover:border-bc-black transition-colors"
+                    >
+                      Agregar
+                    </button>
+                  </div>
+                </div>
+
+                {/* Colores */}
+                <div>
+                  <label className="flex items-center justify-between text-[9px] tracking-[2px] uppercase text-bc-gray-500 mb-1.5">
+                    Colores
+                    <button
+                      type="button"
+                      onClick={handleAddColor}
+                      className="text-bc-accent normal-case tracking-normal text-[10px]"
+                    >
+                      + color
+                    </button>
+                  </label>
+                  <div className="flex flex-wrap gap-2">
+                    {colors.map((c) => {
+                      const active = selectedColors.includes(c.name)
+                      return (
+                        <button
+                          key={c.id}
+                          type="button"
+                          onClick={() => toggleColor(c.name)}
+                          className={`inline-flex items-center gap-1.5 px-2.5 py-1 text-xs border transition-colors ${
+                            active
+                              ? 'border-bc-black bg-bc-black text-bc-white'
+                              : 'border-bc-gray-200 text-bc-gray-700 hover:border-bc-black'
+                          }`}
+                        >
+                          <span
+                            className="inline-block w-3 h-3 rounded-full border border-bc-gray-300"
+                            style={{ backgroundColor: c.hex || 'transparent' }}
+                          />
+                          {c.name}
+                        </button>
+                      )
+                    })}
+                  </div>
+                </div>
+
+                {/* Grilla de stock */}
+                {sizes.length > 0 && selectedColors.length > 0 && (
+                  <div>
+                    <label className="block text-[9px] tracking-[2px] uppercase text-bc-gray-500 mb-2">
+                      Stock por talle × color
+                    </label>
+                    <div className="overflow-x-auto border border-bc-gray-200">
+                      <table className="w-full text-xs">
+                        <thead>
+                          <tr className="bg-bc-gray-100">
+                            <th className="px-3 py-2 text-left text-bc-gray-500 font-normal">
+                              Talle \ Color
+                            </th>
+                            {selectedColors.map((color) => (
+                              <th
+                                key={color}
+                                className="px-3 py-2 text-left text-bc-gray-500 font-normal"
+                              >
+                                {color}
+                              </th>
+                            ))}
+                          </tr>
+                        </thead>
+                        <tbody>
+                          {sizes.map((size) => (
+                            <tr key={size} className="border-t border-bc-gray-100">
+                              <td className="px-3 py-2 text-bc-gray-700">{size}</td>
+                              {selectedColors.map((color) => {
+                                const key = variantKey(size, color)
+                                return (
+                                  <td key={color} className="px-2 py-1.5">
+                                    <input
+                                      type="number"
+                                      min="0"
+                                      value={stock[key] ?? ''}
+                                      placeholder="0"
+                                      onChange={(e) =>
+                                        setStock((prev) => ({
+                                          ...prev,
+                                          [key]: e.target.value,
+                                        }))
+                                      }
+                                      className="w-16 border border-bc-gray-200 px-2 py-1 text-xs focus:border-bc-black outline-none"
+                                    />
+                                  </td>
+                                )
+                              })}
+                            </tr>
+                          ))}
+                        </tbody>
+                      </table>
+                    </div>
+                  </div>
+                )}
+
                 <label className="flex items-center gap-2 cursor-pointer">
                   <input
                     type="checkbox"
@@ -471,7 +661,7 @@ export default function ProductsAdminClient({
                 <div className="flex gap-3 pt-2">
                   <button
                     type="submit"
-                    disabled={saving}
+                    disabled={saving || uploading}
                     className="flex-1 py-3 bg-bc-black text-bc-white text-[10px] tracking-[2px] uppercase font-light hover:bg-bc-accent transition-colors disabled:opacity-50"
                   >
                     {saving ? 'Guardando...' : 'Guardar'}
