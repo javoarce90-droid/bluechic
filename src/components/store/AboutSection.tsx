@@ -1,16 +1,25 @@
+import Image from 'next/image'
+
 export default function AboutSection() {
   return (
     <section id="sobre-mi" className="py-24 px-6 bg-bc-white">
       <div className="max-w-6xl mx-auto grid md:grid-cols-2 gap-16 items-center">
-        <div className="aspect-[3/4] bg-bc-gray-100 overflow-hidden">
-          <div className="w-full h-full bg-gradient-to-br from-bc-gray-100 to-bc-gray-200 flex items-end p-8">
-            <div>
-              <div className="font-display text-2xl font-light text-bc-gray-700 italic">
-                &ldquo;La moda pasa, el estilo queda&rdquo;
-              </div>
-              <div className="text-[10px] tracking-[2px] uppercase text-bc-gray-500 mt-2">
-                — Yves Saint Laurent
-              </div>
+        <div className="relative aspect-[3/4] bg-bc-gray-100 overflow-hidden">
+          <Image
+            src="/about.jpg"
+            alt="La persona detrás de Blue Chic"
+            fill
+            sizes="(max-width: 768px) 100vw, 50vw"
+            className="object-cover"
+            style={{ objectPosition: 'center 15%' }}
+          />
+          <div className="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent" />
+          <div className="absolute bottom-0 left-0 p-8">
+            <div className="font-display text-2xl font-light text-bc-white italic">
+              &ldquo;La moda pasa, el estilo queda&rdquo;
+            </div>
+            <div className="text-[10px] tracking-[2px] uppercase text-bc-gray-300 mt-2">
+              — Yves Saint Laurent
             </div>
           </div>
         </div>
