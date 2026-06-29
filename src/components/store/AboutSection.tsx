@@ -6,7 +6,7 @@ export default function AboutSection() {
           <div className="w-full h-full bg-gradient-to-br from-bc-gray-100 to-bc-gray-200 flex items-end p-8">
             <div>
               <div className="font-display text-2xl font-light text-bc-gray-700 italic">
-                "La moda pasa, el estilo queda"
+                &ldquo;La moda pasa, el estilo queda&rdquo;
               </div>
               <div className="text-[10px] tracking-[2px] uppercase text-bc-gray-500 mt-2">
                 — Yves Saint Laurent
@@ -27,8 +27,8 @@ export default function AboutSection() {
 
           <blockquote className="border-l-2 border-bc-accent pl-6">
             <p className="font-display text-xl font-light italic text-bc-gray-700 leading-relaxed">
-              "Creo que toda mujer merece sentirse extraordinaria en su día a
-              día. Por eso selecciono cada prenda pensando en vos."
+              &ldquo;Creo que toda mujer merece sentirse extraordinaria en su
+              día a día. Por eso selecciono cada prenda pensando en vos.&rdquo;
             </p>
           </blockquote>
 

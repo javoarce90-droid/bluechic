@@ -19,14 +19,16 @@ export default function ProductModal() {
   const [selectedSize, setSelectedSize] = useState<ProductSize | null>(null)
   const [selectedColor, setSelectedColor] = useState<string | null>(null)
   const [qty, setQty] = useState(1)
+  const [shownId, setShownId] = useState<string | null>(null)
 
-  useEffect(() => {
-    if (!isProductModalOpen) {
-      setSelectedSize(null)
-      setSelectedColor(null)
-      setQty(1)
-    }
-  }, [isProductModalOpen])
+  // Reinicia la selección al abrir un producto distinto (o al cerrar), sin usar un efecto.
+  const activeId = isProductModalOpen ? selectedProduct?.id ?? null : null
+  if (activeId !== shownId) {
+    setShownId(activeId)
+    setSelectedSize(null)
+    setSelectedColor(null)
+    setQty(1)
+  }
 
   // Close on escape
   useEffect(() => {
